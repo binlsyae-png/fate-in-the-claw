@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>운명의 크레인 | 3D 인형 뽑기 추첨 게임</title>
+  <meta name="description" content="친구들과 함께 즐기는 고품질 3D 아케이드 인형 뽑기 공정 추첨 게임">
+
+  <!-- Google Fonts & Font Awesome -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;600;800;900&family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- 스타일시트 -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Three.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <!-- Canvas Confetti CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+</head>
+<body>
+
+  <!-- 최상단 플로팅 오디오 및 헤더 바 -->
+  <header class="app-header">
+    <div class="logo-area">
+      <div class="logo-icon-wrap">
+        <i class="fa-solid fa-gamepad"></i>
+      </div>
+      <div class="logo-text">
+        <span class="logo-title">FATE IN THE CLAW</span>
+        <span class="logo-badge">3D ARCADE LOTTERY</span>
+      </div>
+    </div>
+
+    <!-- 사운드 컨트롤러 -->
+    <div class="audio-controls">
+      <button id="btn-sound-toggle" class="btn-audio-icon" title="배경음악 및 효과음 켜기/끄기" aria-label="사운드 토글">
+        <i class="fa-solid fa-volume-high"></i>
+      </button>
+      <div class="volume-slider-wrap">
+        <i class="fa-solid fa-volume-low slider-icon"></i>
+        <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="0.5" title="음량 조절">
+      </div>
+    </div>
+  </header>
+
+  <!-- 메인 애플리케이션 컨테이너 -->
+  <main class="app-main">
+
+    <!-- 1단계: 참가자 입력 화면 -->
+    <section id="screen-input" class="screen-view active">
+      <div class="screen-card">
+        <div class="step-indicator">
+          <span class="step-dot active">1</span>
+          <span class="step-line"></span>
+          <span class="step-dot">2</span>
+          <span class="step-line"></span>
+          <span class="step-dot">3</span>
+          <span class="step-line"></span>
+          <span class="step-dot">4</span>
+        </div>
+
+        <div class="screen-header">
+          <h1 class="main-heading">참가자 이름을 입력해 주세요</h1>
+          <p class="sub-heading">함께 추첨할 친구들의 이름을 입력하세요. (최소 2명 이상)</p>
+        </div>
+
+        <!-- 참가자 추가 인풋 바 -->
+        <div class="input-form-row">
+          <div class="input-wrapper">
+            <i class="fa-solid fa-user-tag input-icon"></i>
+            <input type="text" id="name-input" placeholder="참가자 이름 (예: 민우, 지아)" maxlength="12" autocomplete="off">
+          </div>
+          <button id="btn-add-name" class="btn btn-primary">
+            <i class="fa-solid fa-plus"></i> 추가하기
+          </button>
+        </div>
+
+        <!-- 참가자 리스트 영역 -->
+        <div class="participant-box">
+          <div class="box-header">
+            <span class="box-title"><i class="fa-solid fa-users"></i> 참가자 명단</span>
+            <span id="participant-count-badge" class="count-badge">0명 입력됨</span>
+          </div>
+
+          <div id="participant-list" class="participant-list-container">
+            <!-- 자바스크립트로 동적 렌더링 -->
+          </div>
+        </div>
+
+        <div class="screen-footer">
+          <p class="notice-text"><i class="fa-solid fa-shield-halved"></i> 모든 참가자는 100% 동일한 확률로 공정하게 추첨됩니다.</p>
+          <button id="btn-to-confirm" class="btn btn-next">
+            참가자 확인하기 <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2단계: 참가자 확인 화면 -->
+    <section id="screen-confirm" class="screen-view hidden">
+      <div class="screen-card">
+        <div class="step-indicator">
+          <span class="step-dot done"><i class="fa-solid fa-check"></i></span>
+          <span class="step-line active"></span>
+          <span class="step-dot active">2</span>
+          <span class="step-line"></span>
+          <span class="step-dot">3</span>
+          <span class="step-line"></span>
+          <span class="step-dot">4</span>
+        </div>
+
+        <div class="screen-header">
+          <h2 class="main-heading">참가자 명단을 확인해 주세요</h2>
+          <p class="sub-heading">입력 순서나 위치는 당첨 확률에 일절 영향을 주지 않습니다.</p>
+        </div>
+
+        <div class="fairness-banner">
+          <div class="banner-icon"><i class="fa-solid fa-scale-balanced"></i></div>
+          <div class="banner-text">
+            <strong>공정 추첨 시스템 가동</strong>
+            <span>집게 애니메이션 시작 전 무작위 알고리즘으로 단 한 명의 당첨자가 정밀 결정됩니다.</span>
+          </div>
+        </div>
+
+        <!-- 명단 그리드 -->
+        <div id="confirm-list" class="confirm-cards-grid">
+          <!-- 동적 카드 삽입 -->
+        </div>
+
+        <div class="screen-button-row">
+          <button id="btn-back-to-input" class="btn btn-secondary">
+            <i class="fa-solid fa-chevron-left"></i> 명단 수정하기
+          </button>
+          <button id="btn-to-theme" class="btn btn-next">
+            테마 선택하기 <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3단계: 9개 테마 선택 화면 -->
+    <section id="screen-theme" class="screen-view hidden">
+      <div class="screen-card screen-card-wide">
+        <div class="step-indicator">
+          <span class="step-dot done"><i class="fa-solid fa-check"></i></span>
+          <span class="step-line active"></span>
+          <span class="step-dot done"><i class="fa-solid fa-check"></i></span>
+          <span class="step-line active"></span>
+          <span class="step-dot active">3</span>
+          <span class="step-line"></span>
+          <span class="step-dot">4</span>
+        </div>
+
+        <div class="screen-header">
+          <h2 class="main-heading">추첨 테마를 선택하세요</h2>
+          <p class="sub-heading">원하는 테마 카드를 클릭하면 해당 테마 캐릭터와 고유 배경음악으로 게임이 시작됩니다.</p>
+        </div>
+
+        <!-- 9개 테마 카드 그리드 -->
+        <div id="theme-grid" class="theme-cards-grid">
+          <!-- js/data.js 기반 9개 테마 동적 렌더링 -->
+        </div>
+
+        <div class="screen-button-row">
+          <button id="btn-back-to-confirm" class="btn btn-secondary">
+            <i class="fa-solid fa-chevron-left"></i> 이전 단계
+          </button>
+          <button id="btn-start-game" class="btn btn-next btn-glow">
+            <i class="fa-solid fa-play"></i> 인형 뽑기 시작하기!
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4단계: 3D 인형 뽑기 아케이드 화면 -->
+    <section id="screen-game" class="screen-view hidden">
+      <div class="game-wrapper">
+        <!-- 3D 기계 상단 정보 바 -->
+        <div class="game-hud-bar">
+          <div class="hud-left">
+            <span id="game-theme-badge" class="hud-pill hud-theme">포켓몬</span>
+            <span id="game-count-badge" class="hud-pill hud-count">4명의 참가자</span>
+          </div>
+          <div class="hud-center">
+            <span id="game-hud-notice" class="hud-alert"><i class="fa-solid fa-gamepad"></i> [인형 뽑기 시작]을 누르면 집게가 작동합니다!</span>
+          </div>
+          <div class="hud-right">
+            <button id="btn-game-quit" class="btn-hud-quit" title="테마 선택으로 나가기">
+              <i class="fa-solid fa-arrow-right-from-bracket"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- 3D WebGL 캔버스 컨테이너 -->
+        <div id="canvas-container" class="canvas-3d-wrap">
+          <!-- Three.js 렌더러가 여기에 생성됩니다 -->
+        </div>
+
+        <!-- 하단 아케이드 컨트롤 데크 -->
+        <div class="arcade-deck">
+          <div class="deck-left-deco">
+            <div class="joystick-visual">
+              <div class="joystick-base">
+                <div class="joystick-stick"></div>
+                <div class="joystick-ball"></div>
+              </div>
+            </div>
+            <div class="deck-label">
+              <span>CRANE CONTROL</span>
+              <small>AUTO-TARGETING SYSTEM</small>
+            </div>
+          </div>
+
+          <div class="deck-center-trigger">
+            <button id="btn-trigger-claw" class="btn-arcade-big" aria-label="인형 뽑기 시작">
+              <span class="btn-glow-ring"></span>
+              <span class="btn-top-badge"><i class="fa-solid fa-hand-pointer"></i> PUSH!</span>
+              <span class="btn-inner">
+                <i class="fa-solid fa-hand-fist btn-icon"></i>
+                <span class="btn-label-text">인형 뽑기 시작!</span>
+              </span>
+            </button>
+          </div>
+
+          <div class="deck-right-deco">
+            <div class="coin-slot">
+              <div class="slot-opening"></div>
+              <span>FREE PLAY</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 5단계: 당첨 결과 모달 -->
+  <div id="result-modal" class="modal-backdrop hidden">
+    <div class="modal-box result-modal-box">
+      <div class="modal-confetti-deco"><i class="fa-solid fa-trophy trophy-sparkle"></i></div>
+      
+      <div class="result-badge-pill">🎉 LOTTERY WINNER 🎉</div>
+      
+      <div id="result-message" class="result-celebration-title">축하합니다! 오늘의 주인공!</div>
+      
+      <div class="winner-display-container">
+        <span class="winner-tag">행운의 당첨자</span>
+        <h2 id="result-winner-name" class="winner-hero-name">김예원</h2>
+      </div>
+
+      <div id="result-char-name" class="result-character-sub">
+        뽑힌 인형: 피카츄
+      </div>
+
+      <div class="modal-actions-row">
+        <button id="btn-replay" class="btn btn-primary btn-modal">
+          <i class="fa-solid fa-rotate-right"></i> 다시 뽑기 (새 추첨)
+        </button>
+        <button id="btn-reset-all" class="btn btn-secondary btn-modal">
+          <i class="fa-solid fa-house"></i> 처음으로 돌아가기
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 참가자 이름 수정 모달 -->
+  <div id="edit-modal" class="modal-backdrop hidden">
+    <div class="modal-box edit-modal-box">
+      <h3 class="modal-title"><i class="fa-solid fa-user-pen"></i> 참가자 이름 수정</h3>
+      <div class="input-wrapper" style="margin: 20px 0;">
+        <input type="text" id="edit-input" placeholder="수정할 이름 입력" maxlength="12">
+      </div>
+      <div class="modal-actions-row">
+        <button id="btn-cancel-edit" class="btn btn-secondary">취소</button>
+        <button id="btn-save-edit" class="btn btn-primary">수정 완료</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 메인 스크립트 모듈 -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
